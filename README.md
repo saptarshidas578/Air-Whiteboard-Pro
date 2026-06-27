@@ -186,10 +186,7 @@ Passionate about Computer Vision, Embedded Systems, AI, and Software Development
 GitHub:
 https://github.com/saptarshidas578
 
-LinkedIn:
-(Add your LinkedIn profile here)
 
----
 
 ## ⭐ If you like this project
 
