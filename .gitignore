@@ -1,7 +1,22 @@
-venv/
+# Python caches and virtual environments
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-notes.pdf
-temp_page.png
+*.py[cod]
+*$py.class
+env/
+venv/
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Whiteboard output files
+*.pdf
+whiteboard_export*.pdf
+saved_pages/
+temp/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+*.log
