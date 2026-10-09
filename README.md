@@ -113,7 +113,7 @@ graph TD
 ```
 Air-Whiteboard-Pro/
 ├── air_draw.py             # Primary application and vision pipeline
-├── test_ocr.py             # Unit test script for OCR endpoint
+├── tests/                   # Unit tests and OCR endpoint validation\n│   ├── test_ocr.py\n│   └── test_whiteboard.py\n├── docs/                    # Gesture specs and technical documentation
 ├── requirements.txt        # Python dependency manifest
 ├── .gitignore              # Git ignore exclusions
 └── README.md               # Technical architecture documentation
