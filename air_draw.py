@@ -1,3 +1,21 @@
+"""
+====================================================================================================
+Air Whiteboard Pro - Real-Time Touchless Gesture Canvas with Computer Vision & OCR
+Author: saptarshi2007 (https://github.com/saptarshidas578)
+
+Details:
+A touchless interactive digital canvas powered by OpenCV and MediaPipe Hands:
+- Multithreaded Capture: Dedicated camera capture worker thread (`VideoStream`) decoupling camera I/O
+  from frame processing to maintain high framerates (30+ FPS).
+- Hand Landmark Tracking: 21 3D hand keypoints parsed to determine finger states and geometric gestures.
+- Dynamic Brush & Smoothing: Exponential Moving Average (EMA) coordinate filtering eliminates hand
+  jitter; dynamic pinch distance controls brush diameter.
+- Virtual Touchless UI: Interactive UI overlays on frame for tool selection, color palettes, and eraser.
+- Geometric Shape Recognition: Contour polygon approximation converting hand-drawn strokes to geometric shapes.
+- Multi-Page PDF Export & OCR: Multi-page session buffering with ReportLab PDF compilation and OCR hook.
+====================================================================================================
+"""
+
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -92,12 +110,15 @@ class AirWhiteboard:
 
     # ---------------- HELPERS ----------------
     def finger_up(self, lm, tip, pip):
+        """Evaluate whether a specific finger is extended based on landmark tip vs pip coordinates."""
         return lm[tip].y < lm[pip].y
 
     def save_current_page(self):
+        """Buffer the current canvas state into the multi-page session history."""
         self.pages[self.current_page] = self.canvas.copy()
 
     def detect_shape(self, contour):
+        """Approximate contour geometry using Douglas-Peucker algorithm to identify lines, triangles, rectangles, or circles."""
         perimeter = cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
         vertices = len(approx)
@@ -108,6 +129,7 @@ class AirWhiteboard:
         return "Unknown"
 
     def export_pdf(self):
+        """Compile buffered canvas pages into a single multi-page PDF document using ReportLab."""
         pdf = pdf_canvas.Canvas("notes.pdf")
         filename = "temp_page.png"
         
@@ -122,6 +144,7 @@ class AirWhiteboard:
             os.remove(filename)
         print("PDF saved as notes.pdf")
     def recognize_text(self):
+        """Dispatch cropped drawing bounding box to OCR recognition endpoint in background thread."""
 
         filename = "ocr_temp.png"
         cv2.imwrite(filename, self.canvas)
@@ -152,6 +175,7 @@ class AirWhiteboard:
 
     # ---------------- CORE LOGIC ----------------
     def process_hands(self, frame):
+        """Core computer vision pipeline: detects hand landmarks, parses gestures, and applies drawing operations."""
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.hands.process(rgb)
         self.mode = Mode.IDLE
@@ -241,6 +265,7 @@ class AirWhiteboard:
             self.smooth_x, self.smooth_y = 0, 0
 
     def draw_ui(self, frame):
+        """Render virtual interactive menu header, color palettes, brush controls, and OCR status banner."""
         # Mask-based blending for cleaner drawing overlays
         if self.show_camera and not self.presentation_mode:
             gray = cv2.cvtColor(self.canvas, cv2.COLOR_BGR2GRAY)
@@ -284,6 +309,7 @@ class AirWhiteboard:
         return output
 
     def handle_keyboard(self, frame):
+        """Process keyboard shortcuts for mode toggling, clearing, saving, and exiting."""
         key = cv2.waitKey(1) & 0xFF
         
         if key == 27: # ESC
@@ -344,6 +370,7 @@ class AirWhiteboard:
         return True
 
     def apply_shape_recognition(self):
+        """Extract closed contours from current drawing layer and snap them to perfect geometric primitives."""
         self.undo_stack.append(self.canvas.copy())
         gray = cv2.cvtColor(self.canvas, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
@@ -370,6 +397,7 @@ class AirWhiteboard:
                 break
 
     def run(self):
+        """Master event loop acquiring frames, executing gesture recognition, and displaying output."""
         while True:
             success, frame = self.stream.read()
             if not success or frame is None:
